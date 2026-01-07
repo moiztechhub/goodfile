@@ -1,0 +1,156 @@
+======Voice over ip======
+---------router------
+
+en
+conf t
+
+interface fa0/0
+ip address 10.0.0.1 255.255.255.0
+no shutdown
+exit
+
+ip dhcp excluded-address 10.0.0.1
+ip dhcp pool VOICE
+network 10.0.0.0 255.255.255.0
+default-router 10.0.0.1
+option 150 ip 10.0.0.1
+exit
+
+telephony-service
+max-ephones 2
+max-dn 2
+ip source-address 10.0.0.1 port 2000
+auto assign 1 to 2
+exit
+
+ephone-dn 1
+number 1111
+exit
+
+ephone-dn 2
+number 2222
+exit
+
+--------switch----------
+en
+conf t
+interface range fa0/1 - 3
+switchport mode access
+switchport voice vlan 1
+spanning-tree portfast
+exit
+
+
+show ip dhcp binding
+
+=====NAT=======
+
+----router-----------
+
+enable
+configure terminal
+
+interface fastEthernet 0/0
+ ip address 192.168.1.1 255.255.255.0
+ ip nat inside
+ no shutdown
+ exit
+
+interface fastEthernet 0/1
+ ip address 200.0.0.1 255.255.255.0
+ ip nat outside
+ no shutdown
+ exit
+
+access-list 1 permit 192.168.1.0 0.0.0.255
+
+ip nat inside source list 1 interface fastEthernet 0/1 overload
+
+==============RIP==========
+
+---------r1 1841-----------
+enable
+configure terminal
+
+interface fastEthernet 0/0
+ ip address 10.0.0.1 255.0.0.0
+ no shutdown
+ exit
+
+interface serial 0/0/0
+ ip address 20.0.0.1 255.0.0.0
+ clock rate 64000
+ no shutdown
+ exit
+
+router rip
+ version 2
+ no auto-summary
+ network 10.0.0.0
+ network 20.0.0.0
+ exit
+
+-----r2 1841-------
+
+enable
+configure terminal
+
+interface fastEthernet 0/0
+ ip address 30.0.0.1 255.0.0.0
+ no shutdown
+ exit
+
+interface serial 0/0/0
+ ip address 20.0.0.2 255.0.0.0
+ no shutdown
+ exit
+
+router rip
+ version 2
+ no auto-summary
+ network 20.0.0.0
+ network 30.0.0.0
+ exit
+
+
+====== simple router commands=====
+
+enable 
+configure terminal 
+
+interface gig0/0 
+ip address 192.168.10.1 255.255.255.0 
+no shutdown 
+exit 
+
+ip dhcp excluded-address 192.168.10.1 
+ip dhcp pool RESIDENTIAL 
+network 192.168.10.0 255.255.255.0 
+default-router 192.168.10.1 
+dns-server 8.8.8.8 
+exit 
+
+-----encapsule-----
+interface gig0/1.10 
+encapsulation dot1Q 10 
+ip address 192.168.20.1 255.255.255.192 
+exit 
+=====switch=====
+
+enable 
+configure terminal 
+
+vlan 10 
+name ADMIN 
+exit 
+
+interface range fa0/1 - 2 
+switchport mode access 
+switchport access vlan 10 
+exit 
+---trunk---
+interface fa0/24 
+switchport mode trunk 
+exit 
+
+
